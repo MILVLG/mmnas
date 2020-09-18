@@ -1,6 +1,6 @@
 # MmNas - Deep Multimodal Neural Architecture Search
 This repository corresponds to the **PyTorch** implementation of the MmNas for {Visual Question Answering, Visual Grounding, Image-Text Matching}.
-
+![icon](./icon/icon.png)
 ## Prerequisites
 
 #### Software and Hardware Requirements
