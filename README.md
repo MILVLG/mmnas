@@ -1,8 +1,9 @@
-# MMnas - Deep Multimodal Neural Architecture Search
+# MMnas: Deep Multimodal Neural Architecture Search
 This repository corresponds to the **PyTorch** implementation of the MMnas for visual question answering (VQA), visual grounding (VGD), and image-text matching (ITM) takss.
 <p align="center">
 	<img src="icon/icon.png" width="500">
 </p>
+
 ## Prerequisites
 
 #### Software and Hardware Requirements
