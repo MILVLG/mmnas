@@ -1,6 +1,8 @@
-# MmNas - Deep Multimodal Neural Architecture Search
-This repository corresponds to the **PyTorch** implementation of the MmNas for {Visual Question Answering, Visual Grounding, Image-Text Matching}.
-![icon](./icon/icon.png)
+# MMnas - Deep Multimodal Neural Architecture Search
+This repository corresponds to the **PyTorch** implementation of the MMnas for visual question answering (VQA), visual grounding (VGD), and image-text matching (ITM) takss.
+<p align="center">
+	<img src="icon/icon.png" width="500">
+</p>
 ## Prerequisites
 
 #### Software and Hardware Requirements
@@ -23,7 +25,7 @@ You should first install some necessary packages.
 
 #### Setup for VQA
 
- The image features are extracted using the [bottom-up-attention](https://github.com/peteanderson80/bottom-up-attention) strategy, with each image being represented as an dynamic number (from 10 to 100) of 2048-D features. We store the features for each image in a `.npz` file. You can prepare the visual features by yourself or download the extracted features from [OneDrive](https://awma1-my.sharepoint.com/:f:/g/personal/yuz_l0_tn/EsfBlbmK1QZFhCOFpr4c5HUBzUV0aH2h1McnPG1jWAxytQ?e=2BZl8O) or [BaiduYun](https://pan.baidu.com/s/1C7jIWgM3hFPv-YXJexItgw#list/path=%2F). The downloaded files contains three files: **train2014.tar.gz, val2014.tar.gz, and test2015.tar.gz**, corresponding to the features of the train/val/test images for *VQA-v2*, respectively. You should place them as follows:
+The image features are extracted using the [bottom-up-attention](https://github.com/peteanderson80/bottom-up-attention) strategy, with each image being represented as an dynamic number (from 10 to 100) of 2048-D features. We store the features for each image in a `.npz` file. You can prepare the visual features by yourself or download the extracted features from [OneDrive](https://awma1-my.sharepoint.com/:f:/g/personal/yuz_l0_tn/EsfBlbmK1QZFhCOFpr4c5HUBzUV0aH2h1McnPG1jWAxytQ?e=2BZl8O) or [BaiduYun](https://pan.baidu.com/s/1C7jIWgM3hFPv-YXJexItgw#list/path=%2F). The downloaded files contains three files: **train2014.tar.gz, val2014.tar.gz, and test2015.tar.gz**, corresponding to the features of the train/val/test images for *VQA-v2*, respectively. You should place them as follows:
 
 ```angular2html
 |-- data
@@ -81,9 +83,9 @@ Finally, the `data` folders will have the following structure:
 
 #### Setup for Visual Grounding
 
- The image features are extracted using the [bottom-up-attention](https://github.com/peteanderson80/bottom-up-attention) strategy, with two types featrues are used: 1. visual genome(W/O reference images) pre-trained faster-rcnn detector; 2. coco pre-trained mask-rcnn detector following [MAttNet](https://github.com/lichengunc/MAttNet). We store the features for each image in a `.npz` file. You can prepare the visual features by yourself or download the extracted features from [OneDrive](https://awma1-my.sharepoint.com/:f:/g/personal/yuz_l0_tn/EsfBlbmK1QZFhCOFpr4c5HUBzUV0aH2h1McnPG1jWAxytQ?e=2BZl8O) and place in ./data folder.
+The image features are extracted using the [bottom-up-attention](https://github.com/peteanderson80/bottom-up-attention) strategy, with two types featrues are used: 1. visual genome(W/O reference images) pre-trained faster-rcnn detector; 2. coco pre-trained mask-rcnn detector following [MAttNet](https://github.com/lichengunc/MAttNet). We store the features for each image in a `.npz` file. You can prepare the visual features by yourself or download the extracted features from [OneDrive](https://awma1-my.sharepoint.com/:f:/g/personal/yuz_l0_tn/EsfBlbmK1QZFhCOFpr4c5HUBzUV0aH2h1McnPG1jWAxytQ?e=2BZl8O) and place in ./data folder.
 
- Refs dataset{refcoco, refcoco+, recocog} were introduced [here](https://github.com/lichengunc/refer), build and place them as follow:
+Refs dataset{refcoco, refcoco+, recocog} were introduced [here](https://github.com/lichengunc/refer), build and place them as follow:
 
 
 ```angular2html
@@ -118,9 +120,9 @@ cd ../..
 
 #### Setup for Image-Text Matching
 
- The image features are extracted using the [bottom-up-attention](https://github.com/peteanderson80/bottom-up-attention) strategy, with each image being represented as an dynamic number (fixed 36) of 2048-D features. We store the features for each image in a `.npz` file. You can prepare the visual features by yourself or download the extracted features from [OneDrive](https://awma1-my.sharepoint.com/:f:/g/personal/yuz_l0_tn/EsfBlbmK1QZFhCOFpr4c5HUBzUV0aH2h1McnPG1jWAxytQ?e=2BZl8O) and place in ./data folder.
+The image features are extracted using the [bottom-up-attention](https://github.com/peteanderson80/bottom-up-attention) strategy, with each image being represented as an dynamic number (fixed 36) of 2048-D features. We store the features for each image in a `.npz` file. You can prepare the visual features by yourself or download the extracted features from [OneDrive](https://awma1-my.sharepoint.com/:f:/g/personal/yuz_l0_tn/EsfBlbmK1QZFhCOFpr4c5HUBzUV0aH2h1McnPG1jWAxytQ?e=2BZl8O) and place in ./data folder.
 
- Retrival dataset{flickr, coco} can be found [here](https://scanproject.blob.core.windows.net/scan-data/data_no_feature.zip), extract and place them as follow:
+Retrival dataset{flickr, coco} can be found [here](https://scanproject.blob.core.windows.net/scan-data/data_no_feature.zip), extract and place them as follow:
 
 
 ```angular2html
@@ -203,10 +205,10 @@ You can upload the obtained result json file to [Eval AI](https://evalai.cloudcv
 If this repository is helpful for your research, we'd really appreciate it if you could cite the following paper:
 
 ```
-@article{yu2020deep,
+@article{yu2020mmnas,
   title={Deep Multimodal Neural Architecture Search},
   author={Yu, Zhou and Cui, Yuhao and Yu, Jun and Wang, Meng and Tao, Dacheng and Tian, Qi},
-  journal={arXiv preprint arXiv:2004.12070},
+  journal={ACM Multimedia},
   year={2020}
 }
 ```
