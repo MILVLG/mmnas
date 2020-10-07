@@ -47,7 +47,7 @@ def parse_args():
                       help='fix random seed',
                       type=int)
 
-    parser.add_argument('--GENO_PATH', dest='GENO_PATH', default='./logs/ckpts/arch/train_vqa.json',
+    parser.add_argument('--ARCH_PATH', dest='ARCH_PATH', default='./logs/ckpts/arch/run_vqa.json',
                       help='version control',
                       type=str)
 
@@ -59,11 +59,11 @@ def parse_args():
                       help="gpu select, eg.'0, 1, 2'",
                       type=str)
 
-    parser.add_argument('--SEED', dest='SEED', default=888,
+    parser.add_argument('--SEED', dest='SEED', default=None,
                       help='fix random seed',
                       type=int)
 
-    parser.add_argument('--VERSION', dest='VERSION', default='train_vqa',
+    parser.add_argument('--VERSION', dest='VERSION', default='run_vqa',
                       help='version control',
                       type=str)
 
@@ -84,7 +84,7 @@ class Cfg(Path):
         super(Cfg, self).__init__()
 
         os.environ['MASTER_ADDR'] = 'localhost'
-        os.environ['MASTER_PORT'] = '1242'
+        os.environ['MASTER_PORT'] = str(random.randint(10000, 20000))
         # initialize the process group
         dist.init_process_group("nccl", rank=rank, world_size=world_size)
 
@@ -98,7 +98,10 @@ class Cfg(Path):
         self.DEVICE_IDS = list(range(self.RANK * self.N_GPU, (self.RANK + 1) * self.N_GPU))
 
         # Set Seed For CPU And GPUs
-        self.SEED = args.SEED
+        if args.SEED is None:
+            self.SEED = random.randint(0, 9999)
+        else:
+            self.SEED = args.SEED
         torch.manual_seed(self.SEED)
         torch.cuda.manual_seed(self.SEED)
         torch.cuda.manual_seed_all(self.SEED)
@@ -179,11 +182,11 @@ class Cfg(Path):
             self.OPT_EPS = 1e-9
             self.MAX_EPOCH = 13
 
-        self.GENOTYPE = json.load(open(args.GENO_PATH, 'r+'))['epoch' + str(args.GENO_EPOCH)]
+        self.GENOTYPE = json.load(open(args.ARCH_PATH, 'r+'))['epoch' + str(args.GENO_EPOCH)]
         self.REDUMP_EVAL = False
 
         if self.RANK == 0:
-            print('Use the GENOTYPE PATH:', args.GENO_PATH)
+            print('Use the GENOTYPE PATH:', args.ARCH_PATH)
             print('Use the GENOTYPE EPOCH:', args.GENO_EPOCH)
             print(self.GENOTYPE)
 

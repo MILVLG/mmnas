@@ -1,20 +1,20 @@
 class Path:
     def __init__(self):
-        self.DATASET_ROOT_PATH = './data/refs/'
+        self.DATASET_ROOT_PATH = './data/vgd/'
         # self.DATASET_ROOT_PATH = '/data/cuiyh/dataset/RefCOCO/'
-        self.IMGFEAT_ROOT_PATH = './data/'
+        self.IMGFEAT_ROOT_PATH = './data/vgd/'
         # self.IMGFEAT_ROOT_PATH = '/data/cuiyh/features/'
         self.CKPT_PATH = './logs/ckpts/'
 
         self.IMGFEAT_PATH = {
             'vg_woref':{
-                'train': self.IMGFEAT_ROOT_PATH + 'detfeat100_woref/',
+                'train': self.IMGFEAT_ROOT_PATH + 'bua-r101-fix100/',
             },
-            'coco_mrcn':{
-                'refcoco': self.IMGFEAT_ROOT_PATH + 'vgd_coco/fix100/refcoco_unc/',
-                'refcoco+': self.IMGFEAT_ROOT_PATH + 'vgd_coco/fix100/refcoco+_unc/',
-                'refcocog': self.IMGFEAT_ROOT_PATH + 'vgd_coco/fix100/refcocog_umd/',
-            },
+            # 'coco_mrcn':{
+            #     'refcoco': self.IMGFEAT_ROOT_PATH + 'vgd_coco/fix100/refcoco_unc/',
+            #     'refcoco+': self.IMGFEAT_ROOT_PATH + 'vgd_coco/fix100/refcoco+_unc/',
+            #     'refcocog': self.IMGFEAT_ROOT_PATH + 'vgd_coco/fix100/refcocog_umd/',
+            # },
         }
 
         self.REF_PATH = {

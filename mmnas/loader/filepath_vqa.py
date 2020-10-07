@@ -1,7 +1,7 @@
 class Path:
     def __init__(self):
-        self.DATASET_ROOT_PATH = './data/vqa/'
-        self.IMGFEAT_ROOT_PATH = './data/coco_extract/'
+        self.DATASET_ROOT_PATH = './data/vqa/annotations'
+        self.IMGFEAT_ROOT_PATH = './data/vqa/bua-r101-max100/'
         # self.IMGFEAT_ROOT_PATH = '/data-ssd/vqa/feats/'
         self.CKPT_PATH = './logs/ckpts/'
 
