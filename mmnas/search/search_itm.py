@@ -30,7 +30,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = GPU
 # torch.set_num_threads(2)
 WORLD_SIZE = len(GPU.split(','))
 # WORLD_SIZE = 4
-VERSION = 'train_itm'
+VERSION = 'run_itm'
 
 RUN_MODE = 'train'
 # RUN_MODE = 'val'
