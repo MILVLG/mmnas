@@ -24,5 +24,5 @@ class Path:
         self.EVAL_PATH = {
             'result_test': self.CKPT_PATH + 'result_test/',
             'tmp': self.CKPT_PATH + 'tmp/',
-            'arch': self.CKPT_PATH + 'arch/',
+            'arch': 'arch/',
         }

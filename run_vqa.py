@@ -47,7 +47,7 @@ def parse_args():
                       help='fix random seed',
                       type=int)
 
-    parser.add_argument('--ARCH_PATH', dest='ARCH_PATH', default='./logs/ckpts/arch/run_vqa.json',
+    parser.add_argument('--ARCH_PATH', dest='ARCH_PATH', default='./arch/run_vqa.json',
                       help='version control',
                       type=str)
 

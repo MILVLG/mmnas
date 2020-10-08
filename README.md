@@ -1,7 +1,7 @@
-# MMnas: Deep Multimodal Neural Architecture Search
-This repository corresponds to the **PyTorch** implementation of the MMnas for visual question answering (VQA), visual grounding (VGD), and image-text matching (ITM) takss.
+# MMNas: Deep Multimodal Neural Architecture Search
+This repository corresponds to the **PyTorch** implementation of the MMnas for visual question answering (VQA), visual grounding (VGD), and image-text matching (ITM) tasks.
 <p align="center">
-	<img src="misc/pipeline.png" width="500">
+	<img src="misc/pipeline.png" width="600">
 </p>
 
 ## Prerequisites
@@ -25,7 +25,7 @@ You should first install some necessary packages.
 
 ## Dataset Preparations
 
-Please follow the instructionsin [`dataset_setup.md`](dataset_setup.md) to download the datasets and features.
+Please follow the instructions in [`dataset_setup.md`](./docs/dataset_setup.md) to download the datasets and features.
 
 
 ## Training
@@ -35,19 +35,19 @@ The following script will start training with the default hyperparameters:
 1. VQA
 
 ```bash
-$ python3 run_vqa.py --RUN='train' --ARCH_PATH='./logs/ckpts/arch/run_vqa.json'
+$ python3 run_vqa.py --RUN='train' --ARCH_PATH='./arch/run_vqa.json'
 ```
 
 2. VGD
 
 ```bash
-$ python3 run_vgd.py --RUN='train' --ARCH_PATH='./logs/ckpts/arch/run_vgd.json'
+$ python3 run_vgd.py --RUN='train' --ARCH_PATH='./arch/run_vgd.json'
 ```
 
 3. ITM
 
 ```bash
-$ python3 run_itm.py --RUN='train' --ARCH_PATH='./logs/ckpts/arch/run_itm.json'
+$ python3 run_itm.py --RUN='train' --ARCH_PATH='./arch/run_itm.json'
 ```
 
 To add：
@@ -70,7 +70,7 @@ To add：
 
 ### Offline Evaluation
 
-It is a easy way to modify follows args: --RUN={'val', 'test'} --CKPT_PATH=[Your Model Path] to **Run val or test Split**.
+It's convenient to modify follows args: --RUN={'val', 'test'} --CKPT_PATH=[Your Model Path] to **Run val or test Split**.
 
 Example:
 
@@ -80,14 +80,14 @@ $ python3 run_vqa.py --RUN='test' --CKPT_PATH=[Your Model Path] --ARCH_PATH=[Sea
 
 <!-- You can find all pretrained model in [`pretrained_models.md`](./pretrained_models.md). -->
 
-We provide our experiment results and trained models available for download in [`pretrained_models.md`](./pretrained_models.md).
+We provide our experiment results and trained models available for download in [`pretrained_models.md`](./docs/pretrained_models.md).
 
 
 ### Online Evaluation (ONLY FOR VQA)
 
 Test Result files will stored in ```./logs/ckpts/result_test/result_run_[Your Version].json```
 
-You can upload the obtained result json file to [Eval AI](https://evalai.cloudcv.org/web/challenges/challenge-page/163/overview) to evaluate the scores on *test-dev* and *test-std* splits.
+You can upload the obtained result file to [Eval AI](https://evalai.cloudcv.org/web/challenges/challenge-page/163/overview) to evaluate the scores on *test-dev* and *test-std* splits.
 
 
 ## Citation
