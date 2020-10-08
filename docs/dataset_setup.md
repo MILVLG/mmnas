@@ -107,12 +107,12 @@ Following the strategy in [SCAN](https://github.com/kuanghuei/SCAN), the image f
 
 ```Bash
 $ cat itm-bua-fix36.tar.gz* | tar xz
-$ mv vgd-bua-fix100 data/vgd/bua-r101-fix36
+$ mv itm-bua-fix36 data/itm/flickr_bua-r101-fix36
 ```
 
 The annotation files of the Flickr30K dataset can be downloaded [here](https://scanproject.blob.core.windows.net/scan-data/data_no_feature.zip) and [here](https://cs.stanford.edu/people/karpathy/deepimagesent/caption_datasets.zip) to extract the `f30k_precomp` folder and the `dataset_flickr30k.json` file, respectively.
 
-Finally, the `./data` folder will have the following structure:
+Finally, the `data` folder will have the following structure:
 ```angular2html
 |-- data
 	|-- itm
