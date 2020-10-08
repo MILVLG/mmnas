@@ -27,6 +27,9 @@ You should first install some necessary packages.
 
 Please follow the instructions in [`dataset_setup.md`](./docs/dataset_setup.md) to download the datasets and features.
 
+## Search
+
+To be finished...
 
 ## Training
 
@@ -58,11 +61,11 @@ To add：
 
 3. ```--NW=int```, e.g.```--NW=8``` to accelerate I/O speed.
 
-4. ```--SPLIT={'train', 'train+val', 'train+val+vg'}``` can combine the training datasets as you want. The default training split is ```'train+val+vg'```.  Setting ```--SPLIT='train'```  will trigger the evaluation script to run the validation score after every epoch automatically.
+<!-- 4. ```--SPLIT={'train', 'train+val', 'train+val+vg'}``` can combine the training datasets as you want. The default training split is ```'train+val+vg'```.  Setting ```--SPLIT='train'```  will trigger the evaluation script to run the validation score after every epoch automatically. -->
 
-5. ```--RESUME``` to start training with saved checkpoint parameters.
+4. ```--RESUME``` to start training with saved checkpoint parameters.
 
-6. ```--ARCH_PATH``` can use the different searched architectures.
+5. ```--ARCH_PATH``` can use the different searched architectures.
 
 
 

@@ -8,7 +8,7 @@ Then we trained a [mmnas_vqa](arch/mmnas_vqa.json) on the 'train+val+vg' split a
 
 | Model                                                                                  | Base lr | Overall (%) | Yes/No (%) | Number (%) | Other (%) | 
 |:--------------------------------------------------------------------------------------:|:-------:|:-----------:|:----------:|:----------:|:---------:|
-| [mcan-small](arch/mcan.json) | 7e-5    | 70.69       | 87.08      | 53.16      | 60.66     |
+| [mcan-small](arch/mcan.json) | 1e-4    | 70.69       | 87.08      | 53.16      | 60.66     |
 | mmnas_vqa | 1e-4    | 71.25       | 87.20      | 55.63      | 61.15     |
 
 ## VGD
