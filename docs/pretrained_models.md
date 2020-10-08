@@ -4,7 +4,7 @@ This document contains the models to reproduce of results by using the are searc
 
 ## VQA
 
-We train the [mmnas_vqa](arch/mmnas_vqa.json) on the 'train+val+vg' split and evaluated the model on the 'test-dev' split. **You can download the pretrained model at [here](https://awma1-my.sharepoint.com/:u:/g/personal/yuz_l0_tn/EW-97Xbq_z1Cq8lL1O5GHLQBH7UQLomFOqBplFL9bf83EA?e=Jwyf9V).** For comparsion, we also provide the results from previous state-of-the-art [mcan](https://openaccess.thecvf.com/content_CVPR_2019/html/Yu_Deep_Modular_Co-Attention_Networks_for_Visual_Question_Answering_CVPR_2019_paper.html) model
+We train the [mmnas_vqa](arch/mmnas_vqa.json) on the `train+val+vg` split and evaluated the model on the `test-dev` split. The pretrained model can be downloaded [here](https://awma1-my.sharepoint.com/:u:/g/personal/yuz_l0_tn/EW-97Xbq_z1Cq8lL1O5GHLQBH7UQLomFOqBplFL9bf83EA?e=Jwyf9V). For comparsion, we also report the results from previous state-of-the-art [mcan](https://openaccess.thecvf.com/content_CVPR_2019/html/Yu_Deep_Modular_Co-Attention_Networks_for_Visual_Question_Answering_CVPR_2019_paper.html) model.
 
 | Model                                                                                  | Base lr | Overall (%) | Yes/No (%) | Number (%) | Other (%) | 
 |:--------------------------------------------------------------------------------------:|:-------:|:-----------:|:----------:|:----------:|:---------:|
@@ -13,7 +13,7 @@ We train the [mmnas_vqa](arch/mmnas_vqa.json) on the 'train+val+vg' split and ev
 
 ## VGD
 
-We use the same [mmnas_vgd](./arch/mmnas_itm.json) archtecture for all the three datasets and then train the model for each dataset independently.
+We use the same [mmnas_vgd](./arch/mmnas_itm.json) archtecture for all the three datasets and then train the model for each dataset independently. The pretrained models on three datasets can be downloaded as follows.
 
 <table>
 <tr><th> RefCOCO </th><th> RefCOCO+ </th><th> RefCOCORg </th></tr>
