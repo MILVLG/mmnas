@@ -3,7 +3,7 @@
 
 ## VQA Setup
 
-The image features are extracted using the [bottom-up-attention](https://github.com/peteanderson80/bottom-up-attention) strategy, with each image being represented as a dynamic number (from 10 to 100) of 2048-D features. We store the features for each image in a `.npz` file. You can prepare the visual features by yourself or download the extracted features from [OneDrive](https://awma1-my.sharepoint.com/:f:/g/personal/yuz_l0_tn/EsfBlbmK1QZFhCOFpr4c5HUBzUV0aH2h1McnPG1jWAxytQ?e=2BZl8O) or [BaiduYun](https://pan.baidu.com/s/1C7jIWgM3hFPv-YXJexItgw#list/path=%2F). The downloaded files contains three files: **train2014.tar.gz, val2014.tar.gz, and test2015.tar.gz**, corresponding to the features of the train/val/test images for *VQA-v2*, respectively. Run the following commands to unzip the features:
+The image features are extracted using the [bottom-up-attention](https://github.com/peteanderson80/bottom-up-attention) strategy, with each image being represented as a dynamic number (k=[10,100]) of 2048-D features. We store the features for each image in a `.npz` file. You can prepare the visual features by yourself or download the extracted features from [OneDrive](https://awma1-my.sharepoint.com/:f:/g/personal/yuz_l0_tn/EsfBlbmK1QZFhCOFpr4c5HUBzUV0aH2h1McnPG1jWAxytQ?e=2BZl8O) or [BaiduYun](https://pan.baidu.com/s/1C7jIWgM3hFPv-YXJexItgw#list/path=%2F). The downloaded files contains three files: **train2014.tar.gz, val2014.tar.gz, and test2015.tar.gz**, corresponding to the features of the train/val/test images for *VQA-v2*, respectively. Run the following commands to unzip the features:
 <!-- 
 ```angular2html
 |-- data
@@ -55,14 +55,14 @@ Finally, the `data` folder will have the following structure:
 
 ## VGD Setup
 
-The image features are extracted using the [bottom-up-attention](https://github.com/peteanderson80/bottom-up-attention) strategy, with each image being represented as a fixed number (fixed 100) of 2048-D features. A visual genome(W/O reference images) pre-trained Faster-RCNN detector is used to extract features. We store the features for each image in a `.npz` file. You can prepare the visual features by yourself or download the extracted features from [OneDrive](https://awma1-my.sharepoint.com/:f:/g/personal/yuz_l0_tn/Ehz5A3Eif-JHhZTLhxs7vrEBrDbCEKBUDto4J57fA0GCDg?e=jkTLUy) and run the following commands:
+The image features for VGD task are also extracted using the [bottom-up-attention](https://github.com/peteanderson80/bottom-up-attention) strategy, with each image being represented as a fixed number (k=100) of 2048-D features extracted from a pretrained Faster-RCNN model. For training the Faster RCNN model, we exclude the image that overlapped with the RefCOCO/RefCOCO+/RefCOCOg to avoid contamination of the visual grounding datasets. Similar to VQA, the features for each image are stored in a `.npz` file. We provide the extracted features on [OneDrive](https://awma1-my.sharepoint.com/:f:/g/personal/yuz_l0_tn/Ehz5A3Eif-JHhZTLhxs7vrEBrDbCEKBUDto4J57fA0GCDg?e=jkTLUy). After downloaded the zipped files, you can run the following commands to obtain the features in the right place.
 
 ```Bash
 $ cat vgd-bua-fix100.tar.gz* | tar xz
 $ mv vgd-bua-fix100 data/vgd/bua-r101-fix100
 ```
 
-Refs dataset{refcoco, refcoco+, recocog} can be downloaded from [here](https://github.com/lichengunc/refer), then conduct the preprocessing procedures as follows:
+The annotation files for RefCOCO, RefCOCO+, RefCOCOg can be downloaded from its original repository [here](https://github.com/lichengunc/refer). We provide the scripts as follows to preprocess them into our desired format:
 
 ```Bash
 $ python tools/ref_process.py
@@ -103,14 +103,14 @@ $ cd ../..
 
 ## ITM Setup
 
-The image features are extracted using the [bottom-up-attention](https://github.com/peteanderson80/bottom-up-attention) strategy, with each image being represented as a fixed number (fixed 36) of 2048-D features. We store the features for each image in a `.npz` file. You can prepare the visual features by yourself or download the extracted features from [OneDrive](https://awma1-my.sharepoint.com/:f:/g/personal/yuz_l0_tn/EtbW4UUOn81CgRbIhRzsJUwBEEZDCGQU1oiuhhcBUbEC9Q?e=iCwNdi) and run the following commands:
+Following the strategy in [SCAN](https://github.com/kuanghuei/SCAN), the image features for ITM are also extracted using the [bottom-up-attention](https://github.com/peteanderson80/bottom-up-attention) strategy, with each image being represented as a fixed number (k=36) of 2048-D features. We store the features for each image in a `.npz` file. We provide the extracted features on [OneDrive](https://awma1-my.sharepoint.com/:f:/g/personal/yuz_l0_tn/EtbW4UUOn81CgRbIhRzsJUwBEEZDCGQU1oiuhhcBUbEC9Q?e=iCwNdi). After downloaded the zipped files, you can run the following commands to obtain the features in the right place.
 
 ```Bash
 $ cat itm-bua-fix36.tar.gz* | tar xz
 $ mv vgd-bua-fix100 data/vgd/bua-r101-fix36
 ```
 
-Retrival dataset can be found from [here](https://scanproject.blob.core.windows.net/scan-data/data_no_feature.zip). Extract the `f30k_precomp` folder and place it into `./data/itm/`. `dataset_flickr30k.json` can be found from the [caption datasets](https://cs.stanford.edu/people/karpathy/deepimagesent/caption_datasets.zip), and also be placed into `./data/itm/`.
+The annotation files of the Flickr30K dataset can be downloaded [here](https://scanproject.blob.core.windows.net/scan-data/data_no_feature.zip) and [here](https://cs.stanford.edu/people/karpathy/deepimagesent/caption_datasets.zip) to extract the `f30k_precomp` folder and the `dataset_flickr30k.json` file, respectively.
 
 Finally, the `./data` folder will have the following structure:
 ```angular2html
