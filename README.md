@@ -29,7 +29,7 @@ Please follow the instructions in [`dataset_setup.md`](./docs/dataset_setup.md) 
 
 ## Search
 
-To be finished...
+To be finished.
 
 ## Training
 
@@ -55,7 +55,7 @@ $ python3 run_itm.py --RUN='train' --ARCH_PATH='./arch/run_itm.json'
 
 To add：
 
-1. ```--VERSION=str```, e.g.```--VERSION='small_model'``` to assign a name for your this model.
+1. ```--VERSION=str```, e.g.```--VERSION='mmnas_vqa'``` to assign a name for your this model.
 
 2. ```--GPU=str```, e.g.```--GPU='0, 1, 2, 3'``` to train the model on specified GPU device.
 
@@ -83,14 +83,15 @@ $ python3 run_vqa.py --RUN='test' --CKPT_PATH=[Your Model Path] --ARCH_PATH=[Sea
 
 <!-- You can find all pretrained model in [`pretrained_models.md`](./pretrained_models.md). -->
 
-We provide our experiment results and trained models available for download in [`pretrained_models.md`](./docs/pretrained_models.md).
-
-
 ### Online Evaluation (ONLY FOR VQA)
 
 Test Result files will stored in ```./logs/ckpts/result_test/result_run_[Your Version].json```
 
 You can upload the obtained result file to [Eval AI](https://evalai.cloudcv.org/web/challenges/challenge-page/163/overview) to evaluate the scores on *test-dev* and *test-std* splits.
+
+## Pretrained Models
+
+We provide the pretrained models in [`pretrained_models.md`](./docs/pretrained_models.md) to reproduce the experimental results in our paper.
 
 
 ## Citation
