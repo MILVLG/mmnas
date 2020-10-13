@@ -102,7 +102,7 @@ If this repository is helpful for your research, we'd really appreciate it if yo
 @article{yu2020mmnas,
   title={Deep Multimodal Neural Architecture Search},
   author={Yu, Zhou and Cui, Yuhao and Yu, Jun and Wang, Meng and Tao, Dacheng and Tian, Qi},
-  journal={ACM Multimedia},
+  journal={Proceedings of the 28th ACM International Conference on Multimedia},
   pages = {3743--3752},
   year={2020}
 }
