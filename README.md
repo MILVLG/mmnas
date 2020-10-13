@@ -103,6 +103,7 @@ If this repository is helpful for your research, we'd really appreciate it if yo
   title={Deep Multimodal Neural Architecture Search},
   author={Yu, Zhou and Cui, Yuhao and Yu, Jun and Wang, Meng and Tao, Dacheng and Tian, Qi},
   journal={ACM Multimedia},
+  pages = {3743--3752},
   year={2020}
 }
 ```
