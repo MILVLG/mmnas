@@ -84,7 +84,7 @@ class Cfg(Path):
         super(Cfg, self).__init__()
 
         os.environ['MASTER_ADDR'] = 'localhost'
-        os.environ['MASTER_PORT'] = str(random.randint(10000, 20000))
+        os.environ['MASTER_PORT'] = 12340 if world_size == 1 else str(random.randint(10000, 20000))
         # initialize the process group
         dist.init_process_group("nccl", rank=rank, world_size=world_size)
 
