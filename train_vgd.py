@@ -57,7 +57,7 @@ def parse_args():
                       help='fix random seed',
                       type=int)
 
-    parser.add_argument('--ARCH_PATH', dest='ARCH_PATH', default='./arch/run_vgd.json',
+    parser.add_argument('--ARCH_PATH', dest='ARCH_PATH', default='./arch/train_vgd.json',
                       help='version control',
                       type=str)
 
@@ -73,7 +73,7 @@ def parse_args():
                       help='fix random seed',
                       type=int)
 
-    parser.add_argument('--VERSION', dest='VERSION', default='run_vgd',
+    parser.add_argument('--VERSION', dest='VERSION', default='train_vgd',
                       help='version control',
                       type=str)
 

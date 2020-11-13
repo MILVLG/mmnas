@@ -28,28 +28,22 @@ Please follow the instructions in [`dataset_setup.md`](./docs/dataset_setup.md) 
 
 ## Search
 
-To be finished.
+To search an optimal architecture for a specific task, run
+
+```bash
+$ python3 search_[vqa|vgd|vqa].py
+```
+At the end of each searching epoch, we will output the optimal architecture (choosing operators with
+largest architecture weight for every block) accroding to current architecture weights.
+When the optimal architecture doesn't change for several continuous epochs, you can kill the searching process manually.
+
 
 ## Training
 
-The following script will start training with the default hyperparameters:
-
-1. VQA
+The following script will start training network with the optimal architecture that we've searched by MMNas:
 
 ```bash
-$ python3 run_vqa.py --RUN='train' --ARCH_PATH='./arch/run_vqa.json'
-```
-
-2. VGD
-
-```bash
-$ python3 run_vgd.py --RUN='train' --ARCH_PATH='./arch/run_vgd.json'
-```
-
-3. ITM
-
-```bash
-$ python3 run_itm.py --RUN='train' --ARCH_PATH='./arch/run_itm.json'
+$ python3 train_[vqa|vgd|itm].py --RUN='train' --ARCH_PATH='./arch/train_vqa.json'
 ```
 
 To add：
@@ -66,6 +60,11 @@ To add：
 
 5. ```--ARCH_PATH``` can use the different searched architectures.
 
+If you want to evaluate an architecture that you got from seaching stage, for example, it's the output architecture at the 50-th searching epoch for vqa model, you can run
+
+```bash
+$ python3 train_vqa.py --RUN='train' --ARCH_PATH='[PATH_TO_YOUR_SEARCHING_LOG]' --ARCH_EPOCH=50
+```
 
 
 ## Validation and Testing
@@ -77,14 +76,14 @@ It's convenient to modify follows args: --RUN={'val', 'test'} --CKPT_PATH=[Your 
 Example:
 
 ```bash
-$ python3 run_vqa.py --RUN='test' --CKPT_PATH=[Your Model Path] --ARCH_PATH=[Searched Architecture Path]
+$ python3 train_vqa.py --RUN='test' --CKPT_PATH=[Your Model Path] --ARCH_PATH=[Searched Architecture Path]
 ```
 
 <!-- You can find all pretrained model in [`pretrained_models.md`](./pretrained_models.md). -->
 
 ### Online Evaluation (ONLY FOR VQA)
 
-Test Result files will stored in ```./logs/ckpts/result_test/result_run_[Your Version].json```
+Test Result files will stored in ```./logs/ckpts/result_test/result_train_[Your Version].json```
 
 You can upload the obtained result file to [Eval AI](https://evalai.cloudcv.org/web/challenges/challenge-page/163/overview) to evaluate the scores on *test-dev* and *test-std* splits.
 

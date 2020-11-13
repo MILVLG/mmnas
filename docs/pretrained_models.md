@@ -1,6 +1,6 @@
 # Pretrained Models
 
-This document contains the models to reproduce of results by using the are searched archtectures from MMnas. The prototxt files for mmnas architecture for different tasks can be found in the `arch` folder. We provide pretrained models on different tasks to reproduce the results reported in our paper. You can download these ckpt files, place them at `logs/ckpts/`, and run the `run_[vqa/vgd/itm].py` to evaluate the performance. 
+This document contains the models to reproduce of results by using the are searched archtectures from MMnas. The prototxt files for mmnas architecture for different tasks can be found in the `arch` folder. We provide pretrained models on different tasks to reproduce the results reported in our paper. You can download these ckpt files, place them at `logs/ckpts/`, and run the `train_[vqa/vgd/itm].py` to evaluate the performance. 
 
 ## VQA
 
