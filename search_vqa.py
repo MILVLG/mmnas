@@ -14,14 +14,14 @@ import torch.distributed as dist
 import torch.multiprocessing as mp
 from torch.nn.parallel import DistributedDataParallel as DDP
 
-from mmnas.loader.load_data_vgd import DataSet
-from mmnas.loader.filepath_vgd import Path
-from mmnas.model.hygr_vgd import Net_Search
+from mmnas.loader.load_data_vqa import DataSet
+from mmnas.loader.filepath_vqa import Path
+from mmnas.utils.vqa import VQA
+from mmnas.utils.vqaEval import VQAEval
+from mmnas.model.hygr_vqa import Net_Search
 from mmnas.utils.optimizer import WarmupOptimizer
 from mmnas.utils.sampler import SubsetDistributedSampler
 from mmnas.model.mixed import MixedOp
-from mmnas.utils.bbox_transform import clip_boxes, bbox_transform_inv
-from mmnas.utils.bbox import bbox_overlaps
 
 
 MASTER_ADDR = 'localhost'
@@ -32,7 +32,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = GPU
 # torch.set_num_threads(2)
 WORLD_SIZE = len(GPU.split(','))
 # WORLD_SIZE = 4
-VERSION = 'run_vgd'
+VERSION = 'train_vqa'
 
 RUN_MODE = 'train'
 # RUN_MODE = 'val'
@@ -71,36 +71,23 @@ class CfgSearch(Path):
         # Version Control
         self.VERSION = VERSION + '-search'
         self.RESUME = False
-        self.CKPT_FILE_PATH = ''
+        self.CKPT_FILE_PATH = None
         self.CKPT_EPOCH = 0
 
-        ###
-        self.DATASET = 'refcoco'
-        # self.DATASET = 'refcoco+'
-        # self.DATASET = 'refcocog'
-
-        ###
         self.SPLIT = {
             'train': 'train',
             # 'train': 'train+val',
+            # 'train': 'train+val+vg',
             'val': 'train',
-            # 'val': 'val',
             'test': 'train',
-            # 'test': 'testA',
-            # 'test': 'testB',
-            # 'test': 'test',
         }
         self.SPLIT_PORTION = 0.8
-
-        ###
-        self.IMGFEAT_MODE = 'vg_woref'
-        # self.IMGFEAT_MODE = 'coco_mrcn'
 
         self.NUM_WORKERS = 4
         self.BATCH_SIZE = 64
         self.EVAL_BATCH_SIZE = self.BATCH_SIZE
 
-        self.BBOX_FEATURE = False  #
+        self.BBOX_FEATURE = False
         self.FRCNFEAT_LEN = 100
         self.FRCNFEAT_SIZE = 2048
         self.BBOXFEAT_EMB_SIZE = 2048
@@ -108,14 +95,6 @@ class CfgSearch(Path):
         self.WORD_EMBED_SIZE = 300
         self.REL_SIZE = 64
 
-        ###
-        self.BBOX_NORM = True
-        self.BBOX_NORM_MEANS = (0.0, 0.0, 0.0, 0.0)
-        self.BBOX_NORM_STDS = (0.1, 0.1, 0.2, 0.2)
-        self.OVERLAP_THRESHOLD = 0.5
-        self.SCORES_LOSS = 'kld'
-        self.LOSS_AVG = True
-        self.LOSS_LAMBDA = 0.5
 
         # Network Params
         self.LAYERS = 1
@@ -166,6 +145,7 @@ class CfgSearch(Path):
             self.OPT_EPS = 1e-9
             self.MAX_EPOCH = 100
 
+        # self.ALPHA_START = self.CKPT_EPOCH
         self.ALPHA_START = 20
         self.ALPHA_EVERY = 5
         # self.ALPHA_BINARY_MODE = 'full_v2'
@@ -184,7 +164,6 @@ class CfgSearch(Path):
         self.GENOTYPES_K = 1
         # self.REDUMP_EVAL = False
         self.REDUMP_EVAL = True
-
 
 
 
@@ -222,17 +201,14 @@ class Execution:
         # data_size = train_loader.sampler.total_size
         init_dict = {
             'token_size': train_loader.dataset.token_size,
+            'ans_size': train_loader.dataset.ans_size,
             'pretrained_emb': train_loader.dataset.pretrained_emb,
         }
 
         net = Net_Search(self.__C, init_dict)
         net.to(self.__C.DEVICE_IDS[0])
         net = DDP(net, device_ids=self.__C.DEVICE_IDS)
-        if self.__C.SCORES_LOSS == 'bce':
-            scores_loss = torch.nn.BCEWithLogitsLoss(reduction=self.__C.REDUCTION)
-        else:
-            scores_loss = torch.nn.KLDivLoss(reduction=self.__C.REDUCTION)
-        reg_loss = torch.nn.SmoothL1Loss(reduction=self.__C.REDUCTION).cuda()
+        loss_fn = torch.nn.BCEWithLogitsLoss(reduction=self.__C.REDUCTION)
 
         if self.__C.RESUME:
             print(' ========== Resume training')
@@ -290,13 +266,10 @@ class Execution:
 
             eval_iter = iter(eval_loader)
             for step, step_load in enumerate(train_loader):
-                train_frcn_feat, train_bbox_feat, train_rel_img, train_query_ix, train_rel_query,\
-                train_scores, train_scores_mask, train_transformed_bbox, train_bbox_mask, train_gt_bbox, train_bbox, train_img_shape = step_load
-                train_scores = train_scores.to(self.__C.DEVICE_IDS[0])
-                train_scores_mask = train_scores_mask.to(self.__C.DEVICE_IDS[0])
-                train_transformed_bbox = train_transformed_bbox.to(self.__C.DEVICE_IDS[0])
-                train_bbox_mask = train_bbox_mask.to(self.__C.DEVICE_IDS[0])
-                train_input = (train_frcn_feat, train_bbox_feat, train_rel_img, train_query_ix, train_rel_query)
+                train_frcn_feat, train_bbox_feat, train_rel_img_iter, train_ques_ix, train_ans, train_rel_ques_iter = step_load
+                train_ans = train_ans.to(self.__C.DEVICE_IDS[0])
+                train_input = (train_frcn_feat, train_bbox_feat, train_rel_img_iter, train_ques_ix, train_rel_ques_iter)
+
 
                 if (step + 1) % 100 == 0 and self.__C.RANK == 0:
                     print(net.module.genotype())
@@ -306,23 +279,8 @@ class Execution:
                 MixedOp.MODE = None
                 net.module.reset_binary_gates()
                 net.module.unused_modules_off()
-                pred_scores, pred_reg = net(train_input)
-                # print(pred_scores.size(), train_scores.size(), train_scores_mask.size(), pred_reg.size(), train_transformed_bbox.size(), train_bbox_mask.size())
-                if self.__C.SCORES_LOSS == 'bce':
-                    loss_scores = scores_loss(pred_scores, train_scores)
-                else:
-                    loss_scores = scores_loss(pred_scores * train_scores_mask, train_scores * train_scores_mask)
-                loss_reg = reg_loss(pred_reg * train_bbox_mask, train_transformed_bbox * train_bbox_mask)
-
-                if self.__C.LOSS_AVG:
-                    avg_scores = torch.sum(train_scores_mask.data)
-                    avg_reg = torch.sum(train_bbox_mask.data)
-                    if self.__C.SCORES_LOSS == 'bce':
-                        loss_scores /= self.__C.BATCH_SIZE
-                    else:
-                        loss_scores /= avg_scores
-                    loss_reg /= avg_reg
-                loss = loss_scores + self.__C.LOSS_LAMBDA * loss_reg
+                pred = net(train_input)
+                loss = loss_fn(pred, train_ans)
 
                 # for avoid backward the unused params
                 loss += 0 * sum(p.sum() for p in net.module.alpha_prob_parameters())
@@ -348,38 +306,19 @@ class Execution:
                     is_arch_step = True
                 if is_arch_step:
                     try:
-                        eval_frcn_feat, eval_bbox_feat, eval_rel_img, eval_query_ix, eval_rel_query, \
-                        eval_scores, eval_scores_mask, eval_transformed_bbox, eval_bbox_mask, eval_gt_bbox, eval_bbox, eval_img_shape = next(eval_iter)
+                        eval_frcn_feat, eval_bbox_feat, eval_rel_img_iter, eval_ques_ix, eval_ans, eval_rel_ques_iter = next(eval_iter)
                     except StopIteration:
                         eval_iter = iter(eval_loader)
-                        eval_frcn_feat, eval_bbox_feat, eval_rel_img, eval_query_ix, eval_rel_query, \
-                        eval_scores, eval_scores_mask, eval_transformed_bbox, eval_bbox_mask, eval_gt_bbox, eval_bbox, eval_img_shape = next(eval_iter)
+                        eval_frcn_feat, eval_bbox_feat, eval_rel_img_iter, eval_ques_ix, eval_ans, eval_rel_ques_iter = next(eval_iter)
 
-                    eval_scores = eval_scores.to(self.__C.DEVICE_IDS[0])
-                    eval_scores_mask = eval_scores_mask.to(self.__C.DEVICE_IDS[0])
-                    eval_transformed_bbox = eval_transformed_bbox.to(self.__C.DEVICE_IDS[0])
-                    eval_bbox_mask = eval_bbox_mask.to(self.__C.DEVICE_IDS[0])
-                    eval_input = (eval_frcn_feat, eval_bbox_feat, eval_rel_img, eval_query_ix, eval_rel_query)
+                    eval_ans = eval_ans.to(self.__C.DEVICE_IDS[0])
+                    eval_input = (eval_frcn_feat, eval_bbox_feat, eval_rel_img_iter, eval_ques_ix, eval_rel_ques_iter)
 
                     MixedOp.MODE = self.__C.ALPHA_BINARY_MODE
                     net.module.reset_binary_gates()
                     net.module.unused_modules_off()
-                    pred_scores, pred_reg = net(eval_input)
-                    if self.__C.SCORES_LOSS == 'bce':
-                        loss_scores = scores_loss(pred_scores, eval_scores)
-                    else:
-                        loss_scores = scores_loss(pred_scores * eval_scores_mask, eval_scores * eval_scores_mask)
-                    loss_reg = reg_loss(pred_reg * eval_bbox_mask, eval_transformed_bbox * eval_bbox_mask)
-
-                    if self.__C.LOSS_AVG:
-                        avg_scores = torch.sum(eval_scores_mask.data)
-                        avg_reg = torch.sum(eval_bbox_mask.data)
-                        if self.__C.SCORES_LOSS == 'bce':
-                            loss_scores /= self.__C.BATCH_SIZE
-                        else:
-                            loss_scores /= avg_scores
-                        loss_reg /= avg_reg
-                    loss = loss_scores + self.__C.LOSS_LAMBDA * loss_reg
+                    pred = net(eval_input)
+                    loss = loss_fn(pred, eval_ans)
 
                     # for avoid backward the unused params
                     loss += 0 * sum(p.sum() for p in net.module.alpha_prob_parameters())
@@ -455,13 +394,14 @@ class Execution:
                     valid=True,
                     redump=self.__C.REDUMP_EVAL and epoch_finish == 1 + start_epoch
                 )
-            loss_sum = 0
 
+            loss_sum = 0
 
 
     def eval(self, eval_loader, net=None, valid=False, redump=False):
         init_dict = {
             'token_size': eval_loader.dataset.token_size,
+            'ans_size': eval_loader.dataset.ans_size,
             'pretrained_emb': eval_loader.dataset.pretrained_emb,
         }
 
@@ -473,91 +413,145 @@ class Execution:
                 self.__C.CKPT_FILE_PATH,
                 map_location=map_location)['state_dict']
 
+
             net = Net_Search(self.__C, init_dict)
             net.to(self.__C.DEVICE_IDS[0])
             net = DDP(net, device_ids=self.__C.DEVICE_IDS)
             net.load_state_dict(state_dict)
 
         net.eval()
-        # rest_data_num = eval_loader.sampler.rest_data_num
+        rest_data_num = eval_loader.sampler.rest_data_num
+        ans_ix_list = []
+
         eval_loader.sampler.set_shuffle(False)
         with torch.no_grad():
-            # print(orin_state_dict['module.proj_reg.weight'])
-            orin_reg_weight, orin_reg_bias = None, None
-            if self.__C.BBOX_NORM:
-                for name, params in net.named_parameters():
-                    if 'proj_reg.weight' in name:
-                        orin_reg_weight = copy.deepcopy(params.data)
-                        params.data = params.data * torch.unsqueeze(torch.from_numpy(np.array(self.__C.BBOX_NORM_STDS)).to(self.__C.DEVICE_IDS[0]).float(), 1)
-                    if 'proj_reg.bias' in name:
-                        orin_reg_bias = copy.deepcopy(params.data)
-                        params.data = params.data * torch.from_numpy(np.array(self.__C.BBOX_NORM_STDS)).to(self.__C.DEVICE_IDS[0]).float() + torch.from_numpy(np.array(self.__C.BBOX_NORM_MEANS)).to(self.__C.DEVICE_IDS[0]).float()
-
             MixedOp.MODE = None
             net.module.set_chosen_op_active()
             net.module.unused_modules_off()
 
-            acc_num = 0
-            all_num = 0
-            for step, step_load in enumerate(eval_loader):
-                # print(step, '|', len(eval_loader))
-                eval_frcn_feat, eval_bbox_feat, eval_rel_img, eval_query_ix, eval_rel_query, \
-                eval_scores, eval_scores_mask, eval_transformed_bbox, eval_bbox_mask, eval_gt_bbox, eval_bbox, eval_img_shape = step_load
-                eval_input = (eval_frcn_feat, eval_bbox_feat, eval_rel_img, eval_query_ix, eval_rel_query)
-                # torch.Size([64, 1, 4]) torch.Size([64, 100, 4]) torch.Size([64, 2])
-                eval_gt_bbox = eval_gt_bbox.numpy()
-                eval_bbox = eval_bbox.numpy()
-                eval_img_shape = eval_img_shape.numpy()
+            for step, (eval_frcn_feat, eval_bbox_feat, eval_rel_img_iter, eval_ques_ix, eval_ans, eval_rel_ques_iter) in enumerate(eval_loader):
+                eval_input = (eval_frcn_feat, eval_bbox_feat, eval_rel_img_iter, eval_ques_ix, eval_rel_ques_iter)
+                pred = net(eval_input)
 
-                pred_scores, pred_reg = net(eval_input)  # torch.Size([64, 100]) torch.Size([64, 100, 4])
-                cur_cuda_device = pred_scores.device
-                pred_scores = pred_scores.cpu().data.numpy()
-                pred_reg = pred_reg.cpu().data.numpy()
-                # print(pred_scores.shape, pred_reg.shape)
+                pred_gathers = [torch.zeros_like(pred.unsqueeze(1)) for _ in range(self.__C.WORLD_SIZE)]
+                torch.distributed.all_gather(pred_gathers, pred.unsqueeze(1))
+                pred_gathers = torch.cat(pred_gathers, dim=1).view(pred.size(0) * self.__C.WORLD_SIZE, -1)
 
-                bbox_reg = bbox_transform_inv(eval_bbox.reshape(-1, 4), pred_reg.reshape(-1, 4)).reshape(-1, 100, 4)
-                arg_pred_scores = np.argmax(pred_scores, axis=1)
+                pred_np = pred_gathers.cpu().data.numpy()
+                pred_argmax = np.argmax(pred_np, axis=1)
+                if pred_argmax.shape[0] != self.__C.EVAL_BATCH_SIZE * self.__C.WORLD_SIZE:
+                    pred_argmax = np.pad(
+                        pred_argmax,
+                        (0, self.__C.EVAL_BATCH_SIZE * self.__C.WORLD_SIZE - pred_argmax.shape[0])
+                        , mode='constant',
+                        constant_values=-1
+                    )
+                ans_ix_list.append(pred_argmax)
 
-                for step_ix in range(pred_scores.shape[0]):
-                    cliped_bbox_reg_ix = clip_boxes(bbox_reg[step_ix], eval_img_shape[step_ix])
-                    # print(cliped_bbox_reg_ix[arg_pred_cls[step_ix]].shape, refs_bbox[step_ix, 0].shape)
-                    # overlaps = calc_iou(cliped_bbox_reg_ix[arg_pred_cls[step_ix]], refs_bbox[step_ix, 0])
-                    overlaps = bbox_overlaps(
-                        np.ascontiguousarray(cliped_bbox_reg_ix[arg_pred_scores[step_ix]][np.newaxis, :], dtype=np.float),
-                        np.ascontiguousarray(eval_gt_bbox[step_ix], dtype=np.float))[:, 0]
-                    # print(overlaps, cliped_bbox_reg_ix[arg_pred_cls[step_ix]], refs_bbox[step_ix, 0])
-
-                    all_num += 1
-                    if overlaps >= self.__C.OVERLAP_THRESHOLD:
-                        acc_num += 1
 
             net.module.unused_modules_back()
-
-            if self.__C.BBOX_NORM:
-                for name, params in net.named_parameters():
-                 if 'proj_reg.weight' in name:
-                     params.data = orin_reg_weight
-                 if 'proj_reg.bias' in name:
-                     params.data = orin_reg_bias
-
-            # print(acc_num, 283 + 271 + 263+ 281)
-            acc_num = torch.tensor([acc_num]).to(cur_cuda_device)
-            torch.distributed.all_reduce(acc_num)
-            acc_num = acc_num.item()
-            # print(acc_num)
-
-            all_num = torch.tensor([all_num]).to(cur_cuda_device)
-            torch.distributed.all_reduce(all_num)
-            all_num = all_num.item()
-            # print(all_num)
-
-            accuracy = acc_num / float(all_num) * 100.
-
             if self.__C.RANK == 0:
-                print('accuracy = ' + str(accuracy) + ' %')
-                logfile = open('./logs/log/log_' + self.__C.VERSION + '.txt', 'a+')
-                logfile.write("Overall Accuracy is: %.02f\n\n" % (accuracy))
-                logfile.close()
+                ans_ix_list = np.array(ans_ix_list).reshape(-1)
+
+                subset_indices = eval_loader.sampler.subset_indices
+                if eval_loader.drop_last:
+                    dropped_size = int(
+                        eval_loader.sampler.total_size / (self.__C.EVAL_BATCH_SIZE * self.__C.WORLD_SIZE)) \
+                                   * (self.__C.EVAL_BATCH_SIZE * self.__C.WORLD_SIZE)
+                    if dropped_size < len(subset_indices):
+                        subset_indices = subset_indices[:dropped_size]
+
+                print(ans_ix_list.shape)
+                print(len(subset_indices))
+
+                if len(subset_indices) == len(eval_loader.dataset):
+                    print('Full evaluation')
+                    ques_list = eval_loader.dataset.ques_list
+                else:
+                    print('Partial evaluation')
+                    ques_list = [eval_loader.dataset.ques_list[ix] for ix in subset_indices]
+
+                qid_list = [ques['question_id'] for ques in ques_list]
+                qid_contain = {ques['question_id']: 0 for ques in ques_list}
+                # qid_list = [ques['question_id'] for ques in eval_loader.dataset.ques_list]
+                result = [{
+                    'answer': eval_loader.dataset.ix_to_ans[ans_ix_list[ix]],
+                    'question_id': int(qid_list[ix])
+                } for ix in range(qid_list.__len__())]
+
+                if valid:
+                    result_eval_file = self.__C.EVAL_PATH['tmp'] + 'result_' + self.__C.VERSION + '.json'
+                else:
+                    result_eval_file = self.__C.EVAL_PATH['result_test'] + 'result_' + \
+                                       self.__C.VERSION + '_epoch' + str(self.__C.CKPT_EPOCH) + '.json'
+                json.dump(result, open(result_eval_file, 'w'))
+
+                # if self.__C.TEST_SAVE_PRED:
+                #     ensemble_file = self.__C.PRED_PATH + 'ensemble_' + self.__C.VERSION + '_epoch' + str(self.__C.CKPT_EPOCH) + '.pkl'
+                #     pred_list = np.array(pred_list).reshape(-1, init_dict['ans_size'])
+                #     result_pred = [{'answer': pred_list[ix], 'question_id': qid_list[ix]}
+                #                    for ix in range(len(qid_list))]
+                #     pickle.dump(result_pred, open(ensemble_file, 'wb+'), protocol=-1)
+
+                if valid:
+                    # create vqa object and vqaRes object
+                    if len(subset_indices) == len(eval_loader.dataset):
+                        ques_file_path = self.__C.QUESTION_PATH[self.__C.SPLIT['val']]
+                        ans_file_path = self.__C.QUESTION_PATH[self.__C.SPLIT['val'] + '-anno']
+                    else:
+                        ques_file_path = self.__C.EVAL_PATH['tmp'] + 'ques_temp_' + self.__C.VERSION + '.json'
+                        ans_file_path = self.__C.EVAL_PATH['tmp'] + 'anno_temp_' + self.__C.VERSION + '.json'
+
+                        if redump:
+                            print('Re-dump the partial eval files ...')
+                            ques = json.load(open(self.__C.QUESTION_PATH[self.__C.SPLIT['val']], 'r'))
+                            anno = json.load(open(self.__C.QUESTION_PATH[self.__C.SPLIT['val'] + '-anno'], 'r'))
+                            ques['questions'] = [ques['questions'][ix] for ix in subset_indices]
+                            assert len(qid_list) == len(ques['questions'])
+
+                            anno_annotations = []
+                            for anno_item in anno['annotations']:
+                                if anno_item['question_id'] in qid_contain:
+                                    anno_annotations.append(anno_item)
+                            anno['annotations'] = anno_annotations
+                            assert len(qid_list) == len(anno['annotations'])
+
+                            json.dump(ques, open(ques_file_path, 'w'))
+                            json.dump(anno, open(ans_file_path, 'w'))
+                            print('Finished')
+
+                    vqa = VQA(ans_file_path, ques_file_path)
+                    vqaRes = vqa.loadRes(result_eval_file, ques_file_path)
+
+                    # create vqaEval object by taking vqa and vqaRes
+                    vqaEval = VQAEval(vqa, vqaRes,
+                                      n=2)  # n is precision of accuracy (number of places after decimal), default is 2
+
+                    # evaluate results
+                    """
+                    If you have a list of question ids on which you would like to evaluate your results, pass it as a list to below function
+                    By default it uses all the question ids in annotation file
+                    """
+                    vqaEval.evaluate()
+
+                    # print accuracies
+                    print("\n")
+                    print("Overall Accuracy is: %.02f\n" % (vqaEval.accuracy['overall']))
+                    # print("Per Question Type Accuracy is the following:")
+                    # for quesType in vqaEval.accuracy['perQuestionType']:
+                    #     print("%s : %.02f" % (quesType, vqaEval.accuracy['perQuestionType'][quesType]))
+                    # print("\n")
+                    print("Per Answer Type Accuracy is the following:")
+                    for ansType in vqaEval.accuracy['perAnswerType']:
+                        print("%s : %.02f" % (ansType, vqaEval.accuracy['perAnswerType'][ansType]))
+                    print("\n")
+
+                    logfile = open('./logs/log/log_' + self.__C.VERSION + '.txt', 'a+')
+                    logfile.write("Overall Accuracy is: %.02f\n" % (vqaEval.accuracy['overall']))
+                    for ansType in vqaEval.accuracy['perAnswerType']:
+                        logfile.write("%s : %.02f " % (ansType, vqaEval.accuracy['perAnswerType'][ansType]))
+                    logfile.write("\n\n")
+                    logfile.close()
 
 
     def run(self):

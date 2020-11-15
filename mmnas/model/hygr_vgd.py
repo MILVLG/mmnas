@@ -1,5 +1,7 @@
 from mmnas.utils.ops_adapter import OpsAdapter
 from mmnas.model.mixed import MixedOp
+import numpy as np
+import math, random, json
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -138,6 +140,22 @@ class Net_Search(nn.Module):
                 param.data.normal_(0, 1e-3)
             elif self.__C.ALPHA_INIT_TYPE == 'uniform':
                 param.data.uniform_(-1e-3, 1e-3)
+        
+        init_gene_flat_enc = ['self_att_64', 'feed_forward', 'self_att_64', 'feed_forward', 'self_att_64', 'feed_forward', 'self_att_64', 'feed_forward', 'self_att_64', 'feed_forward', 'self_att_64', 'feed_forward', ]
+        init_gene_flat_dec = ['rel_self_att_64', 'guided_att_64', 'feed_forward', 'rel_self_att_64', 'guided_att_64', 'feed_forward', 'rel_self_att_64', 'guided_att_64', 'feed_forward', 'rel_self_att_64', 'guided_att_64', 'feed_forward', 'rel_self_att_64', 'guided_att_64', 'feed_forward', 'rel_self_att_64', 'guided_att_64', 'feed_forward', 'rel_self_att_64', 'guided_att_64', 'feed_forward']
+        init_gene_flat = init_gene_flat_enc + init_gene_flat_dec
+        init_a = 1.
+        init_b = -1.
+        for ix, (name, prob) in enumerate(zip(init_gene_flat, self._alphas_prob)):
+            if ix < 12:
+                init_np = np.zeros(len(OPS_ADAPTER.Used_OPS['enc_safe']), dtype=np.float32) + init_b
+                # print(OPS_ADAPTER.Used_OPS[name].index(name))
+                init_np[OPS_ADAPTER.Used_OPS['enc_safe'].index(name)] = init_a
+            else:
+                init_np = np.zeros(len(OPS_ADAPTER.Used_OPS['dec_safe']), dtype=np.float32) + init_b
+                # print(OPS_ADAPTER.Used_OPS[name].index(name))
+                init_np[OPS_ADAPTER.Used_OPS['dec_safe'].index(name)] = init_a
+            prob[1].data = torch.from_numpy(init_np)
 
     @property
     def redundant_modules(self):
